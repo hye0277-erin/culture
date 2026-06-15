@@ -1,0 +1,309 @@
+<!doctype html>
+<html lang="ko" data-theme="light" data-font="paperlogic">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Culture Diary</title>
+  <meta name="description" content="나를 이해하기 위한 문화 기록 — 개인 문화 아카이브 웹앱" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Nanum+Pen+Script&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+  <link rel="stylesheet" href="./assets/css/style.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <!-- ── Sidebar ── -->
+    <aside class="sidebar" aria-label="사이드 메뉴">
+      <div class="brand">
+        <span class="brand-mark">C</span>
+        <div>
+          <strong>Culture Diary</strong>
+          <small>Private Archive</small>
+        </div>
+      </div>
+
+      <nav class="nav" aria-label="주요 메뉴">
+        <button class="nav-item is-active" data-view="dashboard">
+          <span class="nav-icon">⌘</span> Dashboard
+        </button>
+        <button class="nav-item" data-view="archive">
+          <span class="nav-icon">□</span> Archive
+        </button>
+        <button class="nav-item" data-view="calendar">
+          <span class="nav-icon">◫</span> Calendar
+        </button>
+        <button class="nav-item" data-view="new-record">
+          <span class="nav-icon">＋</span> New Record
+        </button>
+        <button class="nav-item" data-view="report">
+          <span class="nav-icon">◐</span> Report
+        </button>
+      </nav>
+
+      <!-- 커스터마이즈 패널 -->
+      <div class="customize-panel">
+        <p class="eyebrow">Customize</p>
+
+        <div class="custom-row">
+          <span class="custom-label">테마</span>
+          <div class="toggle-group" id="themeToggle">
+            <button class="toggle-btn is-active" data-theme="light">☀ Light</button>
+            <button class="toggle-btn" data-theme="dark">☾ Dark</button>
+          </div>
+        </div>
+
+        <div class="custom-row">
+          <span class="custom-label">폰트</span>
+          <div class="toggle-group" id="fontToggle">
+            <button class="toggle-btn is-active" data-font="paperlogic">Pretendard</button>
+            <button class="toggle-btn" data-font="handwriting">손글씨</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="side-card">
+        <p class="eyebrow">Private First</p>
+        <p>모든 기록은 기본 비공개입니다.</p>
+      </div>
+    </aside>
+
+    <!-- ── Main ── -->
+    <main class="main">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">Culture Diary</p>
+          <h1 id="pageTitle">나의 문화 기록</h1>
+        </div>
+        <div class="top-actions">
+          <label class="search-box" for="globalSearch">
+            <span>Search</span>
+            <input id="globalSearch" type="search" placeholder="제목, 감상, 태그 검색" />
+          </label>
+          <button class="btn primary" data-view-trigger="new-record">기록하기</button>
+        </div>
+      </header>
+
+      <!-- ── Dashboard ── -->
+      <section class="view is-visible" id="dashboard" data-title="나의 문화 기록 대시보드">
+        <div class="hero-panel">
+          <div>
+            <p class="eyebrow">Mood Archive</p>
+            <h2>보여주기 위한 리뷰가 아니라,<br />나를 이해하기 위한 문화 기록.</h2>
+            <p class="hero-copy">영화, 전시, 공연, 책, 음악 등 문화 경험을 감정 태그와 함께 정리하고 취향 흐름을 확인하는 개인형 웹앱입니다.</p>
+          </div>
+          <button class="btn dark" data-view-trigger="new-record">오늘의 기록 남기기</button>
+        </div>
+
+        <div class="summary-grid" id="summaryGrid"></div>
+
+        <div class="content-grid dashboard-grid">
+          <section class="panel span-8">
+            <div class="panel-head">
+              <div>
+                <p class="eyebrow">Recent Records</p>
+                <h3>최근 문화 기록</h3>
+              </div>
+              <button class="text-btn" data-view-trigger="archive">전체 보기</button>
+            </div>
+            <div class="record-row" id="recentRecords"></div>
+          </section>
+
+          <section class="panel span-4">
+            <div class="panel-head">
+              <div>
+                <p class="eyebrow">Today Question</p>
+                <h3>오늘의 질문</h3>
+              </div>
+            </div>
+            <div class="question-card">
+              <strong>오늘 가장 오래 남은 장면은?</strong>
+              <p>짧게라도 남기면 나중에 취향의 흐름을 다시 볼 수 있어요.</p>
+              <button class="btn outline" data-view-trigger="new-record">한 줄 감상 쓰기</button>
+            </div>
+          </section>
+        </div>
+      </section>
+
+      <!-- ── Archive ── -->
+      <section class="view" id="archive" data-title="아카이브">
+        <div class="panel archive-panel">
+          <div class="panel-head archive-head">
+            <div>
+              <p class="eyebrow">Archive</p>
+              <h3>기록 모아보기</h3>
+            </div>
+            <div class="archive-controls">
+              <div class="filter-tools">
+                <select id="categoryFilter" aria-label="카테고리 필터">
+                  <option value="all">전체 카테고리</option>
+                </select>
+                <select id="sortFilter" aria-label="정렬">
+                  <option value="latest">최신순</option>
+                  <option value="oldest">오래된순</option>
+                  <option value="rating">평점순</option>
+                </select>
+              </div>
+              <div class="view-toggle" id="archiveViewToggle" aria-label="보기 방식">
+                <button class="view-toggle-btn is-active" data-view-mode="card" title="카드형">
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                    <rect x="0" y="0" width="7" height="7" rx="1.5"/><rect x="9" y="0" width="7" height="7" rx="1.5"/>
+                    <rect x="0" y="9" width="7" height="7" rx="1.5"/><rect x="9" y="9" width="7" height="7" rx="1.5"/>
+                  </svg>
+                  카드
+                </button>
+                <button class="view-toggle-btn" data-view-mode="list" title="리스트형">
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                    <rect x="0" y="1" width="16" height="2.5" rx="1.25"/><rect x="0" y="6.5" width="16" height="2.5" rx="1.25"/>
+                    <rect x="0" y="12" width="16" height="2.5" rx="1.25"/>
+                  </svg>
+                  리스트
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="archive-grid" id="archiveGrid"></div>
+          <div class="empty-state" id="archiveEmpty" hidden>
+            <strong>아직 기록이 없습니다.</strong>
+            <p>첫 번째 문화 기록을 남겨보세요.</p>
+            <button class="btn primary" data-view-trigger="new-record">기록하기</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── Calendar ── -->
+      <section class="view" id="calendar" data-title="달력">
+        <div class="panel calendar-panel">
+          <div class="panel-head">
+            <div>
+              <p class="eyebrow">Calendar</p>
+              <h3 id="calendarTitle">2026년 6월</h3>
+            </div>
+            <div class="cal-nav">
+              <button class="btn outline cal-nav-btn" id="calPrev">‹</button>
+              <button class="btn outline cal-nav-btn" id="calToday">오늘</button>
+              <button class="btn outline cal-nav-btn" id="calNext">›</button>
+            </div>
+          </div>
+
+          <!-- 스티커 트레이 -->
+          <div class="sticker-tray">
+            <p class="eyebrow">스티커</p>
+            <div class="sticker-list" id="stickerList"></div>
+            <p class="sticker-hint">스티커를 달력에 드래그하거나 날짜 칸을 클릭해 붙이세요.</p>
+          </div>
+
+          <div class="calendar-grid" id="calendarGrid"></div>
+        </div>
+
+        <!-- 드래그 중 이미지 -->
+        <div class="drag-ghost" id="dragGhost"></div>
+      </section>
+
+      <!-- ── New Record ── -->
+      <section class="view" id="new-record" data-title="새 기록 등록">
+        <form class="record-form panel" id="recordForm">
+          <input type="hidden" id="recordId" />
+          <div class="form-head">
+            <div>
+              <p class="eyebrow">New Record</p>
+              <h3 id="formTitle">문화 기록 등록</h3>
+            </div>
+            <div style="display:flex;gap:10px">
+              <button class="btn outline" type="button" id="cancelForm">취소</button>
+              <button class="btn primary" type="submit">저장하기</button>
+            </div>
+          </div>
+
+          <div class="form-grid">
+            <section class="form-section">
+              <h4>기본 정보</h4>
+              <label>카테고리
+                <select id="category">
+                  <option value="영화">영화</option>
+                  <option value="전시">전시</option>
+                  <option value="공연">공연</option>
+                  <option value="책">책</option>
+                  <option value="음악">음악</option>
+                  <option value="드라마">드라마</option>
+                  <option value="공간">공간</option>
+                </select>
+              </label>
+              <label>제목
+                <input id="title" type="text" placeholder="예: 괴물, 빛의 시선, 데미안" />
+              </label>
+              <label>감상 날짜
+                <input id="consumedDate" type="date" />
+              </label>
+              <label>장소 / 플랫폼
+                <input id="place" type="text" placeholder="예: CGV 용산, 국립현대미술관, 넷플릭스" />
+              </label>
+              <label>평점
+                <div class="star-rating" id="starRating">
+                  <span class="star" data-val="1">★</span>
+                  <span class="star" data-val="2">★</span>
+                  <span class="star" data-val="3">★</span>
+                  <span class="star" data-val="4">★</span>
+                  <span class="star" data-val="5">★</span>
+                </div>
+                <input type="hidden" id="rating" value="0" />
+              </label>
+            </section>
+
+            <section class="form-section">
+              <h4>감상 기록</h4>
+              <label>감정 태그 <small>쉼표로 구분</small>
+                <input id="moodTags" type="text" placeholder="잔잔한, 먹먹한, 오래 남는" />
+              </label>
+              <div class="mood-suggest" id="moodSuggest"></div>
+              <label>한 줄 감상
+                <input id="oneLineReview" type="text" placeholder="조용하지만 오래 흔들리는 이야기" />
+              </label>
+              <label>상세 감상
+                <textarea id="fullReview" rows="6" placeholder="작품을 본 뒤 남은 생각을 자유롭게 적어보세요."></textarea>
+              </label>
+              <label>대표 이미지
+                <input id="imageFile" type="file" accept="image/*" />
+              </label>
+              <div class="image-preview" id="imagePreview">이미지 미리보기</div>
+            </section>
+          </div>
+        </form>
+      </section>
+
+      <!-- ── Report ── -->
+      <section class="view" id="report" data-title="취향 리포트">
+        <div class="content-grid">
+          <section class="panel span-6">
+            <div class="panel-head">
+              <div><p class="eyebrow">Category</p><h3>카테고리별 기록</h3></div>
+            </div>
+            <div class="chart-list" id="categoryChart"></div>
+          </section>
+          <section class="panel span-6">
+            <div class="panel-head">
+              <div><p class="eyebrow">Mood</p><h3>감정 태그 순위</h3></div>
+            </div>
+            <div class="tag-cloud" id="moodCloud"></div>
+          </section>
+          <section class="panel span-12">
+            <div class="panel-head">
+              <div><p class="eyebrow">Taste Keywords</p><h3>나의 취향 키워드</h3></div>
+            </div>
+            <p class="report-copy" id="tasteSentence"></p>
+          </section>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- ── Record Detail Dialog ── -->
+  <dialog class="detail-dialog" id="detailDialog">
+    <button class="dialog-close" id="closeDialog" aria-label="닫기">×</button>
+    <div id="detailContent"></div>
+  </dialog>
+
+  <!-- ── Sticker on Calendar (dragging layer) ── -->
+  <script src="./assets/js/app.js"></script>
+</body>
+</html>
