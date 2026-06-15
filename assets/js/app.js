@@ -261,7 +261,7 @@ function recordCard(r) {
       <div class="record-body">
         <div class="record-meta">
           <span>${escText(r.category)}</span>
-          <span>${fmtDate(r.consumedDate)}</span>
+          <span>${fmtDate(r.consumedDate)}${r.consumedTime ? ' ' + r.consumedTime : ''}</span>
         </div>
         <div class="record-title">${escText(r.title)}</div>
         <p class="record-review">${escText(r.oneLineReview || '')}</p>
@@ -608,7 +608,7 @@ function openDetail(id) {
         <p class="eyebrow">${escText(r.category)} · Private Record</p>
         <h3>${escText(r.title)}</h3>
         <p class="record-review" style="font-size:14px;">
-          ${fmtDate(r.consumedDate)} · ${escText(r.place || '장소 미입력')} · ${stars(r.rating)}
+          ${fmtDate(r.consumedDate)}${r.consumedTime ? ' ' + r.consumedTime : ''} · ${escText(r.place || '장소 미입력')} · ${stars(r.rating)}
         </p>
         <div class="tag-list" style="margin:12px 0">${tags}</div>
         <h4 style="margin-top:18px;font-size:14px;">한 줄 감상</h4>
@@ -641,6 +641,118 @@ function setStarRating(val) {
   currentRating = val;
   $('#rating').value = val;
   $$('.star').forEach((s) => s.classList.toggle('active', Number(s.dataset.val) <= val));
+}
+
+/* ═══════════════════════════════════════
+   커스텀 날짜 피커
+═══════════════════════════════════════ */
+var pickerYear  = new Date().getFullYear();
+var pickerMonth = new Date().getMonth();
+var pickerSelectedDate = null; // Date 객체
+
+function pickerOpen() {
+  var d = pickerSelectedDate || new Date();
+  pickerYear  = d.getFullYear();
+  pickerMonth = d.getMonth();
+  renderPicker();
+  $('#customPicker').hidden = false;
+}
+
+function pickerClose() {
+  $('#customPicker').hidden = true;
+}
+
+function renderPicker() {
+  var months = ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
+  $('#pickerTitle').textContent = pickerYear + '년 ' + months[pickerMonth];
+
+  var today     = new Date();
+  var firstDay  = new Date(pickerYear, pickerMonth, 1).getDay();
+  var lastDate  = new Date(pickerYear, pickerMonth + 1, 0).getDate();
+  var prevLast  = new Date(pickerYear, pickerMonth, 0).getDate();
+
+  var html = '';
+  var totalCells = Math.ceil((firstDay + lastDate) / 7) * 7;
+
+  for (var i = 0; i < totalCells; i++) {
+    var col = i % 7;
+    var dayNum, isOther = false, year = pickerYear, month = pickerMonth;
+
+    if (i < firstDay) {
+      dayNum  = prevLast - firstDay + i + 1;
+      month   = pickerMonth - 1;
+      if (month < 0) { month = 11; year = pickerYear - 1; }
+      isOther = true;
+    } else if (i - firstDay >= lastDate) {
+      dayNum  = i - firstDay - lastDate + 1;
+      month   = pickerMonth + 1;
+      if (month > 11) { month = 0; year = pickerYear + 1; }
+      isOther = true;
+    } else {
+      dayNum = i - firstDay + 1;
+    }
+
+    var isToday    = !isOther && year === today.getFullYear() && month === today.getMonth() && dayNum === today.getDate();
+    var isSelected = pickerSelectedDate &&
+                     year  === pickerSelectedDate.getFullYear() &&
+                     month === pickerSelectedDate.getMonth() &&
+                     dayNum === pickerSelectedDate.getDate();
+    var isSun = col === 0;
+    var isSat = col === 6;
+
+    var cls = ['picker-day'];
+    if (isOther)    cls.push('other-month');
+    if (isToday)    cls.push('is-today');
+    if (isSelected) cls.push('is-selected');
+    if (!isOther && isSun) cls.push('is-sun');
+    if (!isOther && isSat) cls.push('is-sat');
+
+    html += '<button type="button" class="' + cls.join(' ') + '" data-y="' + year + '" data-m="' + month + '" data-d="' + dayNum + '">' + dayNum + '</button>';
+  }
+
+  $('#pickerDays').innerHTML = html;
+
+  $$('#pickerDays .picker-day').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      pickerSelectedDate = new Date(
+        parseInt(btn.dataset.y),
+        parseInt(btn.dataset.m),
+        parseInt(btn.dataset.d)
+      );
+      // display에 yyyy-mm-dd 형식으로 표시
+      var yy = pickerSelectedDate.getFullYear();
+      var mm = String(pickerSelectedDate.getMonth() + 1).padStart(2, '0');
+      var dd = String(pickerSelectedDate.getDate()).padStart(2, '0');
+      $('#consumedDate').value = yy + '-' + mm + '-' + dd;
+      pickerClose();
+    });
+  });
+}
+
+function initDatePicker() {
+  $('#consumedDate').addEventListener('click', function(e) {
+    e.stopPropagation();
+    if ($('#customPicker').hidden) pickerOpen();
+    else pickerClose();
+  });
+  $('#pickerPrev').addEventListener('click', function(e) {
+    e.stopPropagation();
+    pickerMonth--;
+    if (pickerMonth < 0) { pickerMonth = 11; pickerYear--; }
+    renderPicker();
+  });
+  $('#pickerNext').addEventListener('click', function(e) {
+    e.stopPropagation();
+    pickerMonth++;
+    if (pickerMonth > 11) { pickerMonth = 0; pickerYear++; }
+    renderPicker();
+  });
+  // 피커 외부 클릭 시 닫기
+  document.addEventListener('click', function(e) {
+    if (!$('#customPicker').hidden && !e.target.closest('#customPicker') && e.target !== $('#consumedDate')) {
+      pickerClose();
+    }
+  });
 }
 
 function bindStars() {
@@ -680,11 +792,18 @@ function resetForm() {
   $('#recordForm').reset();
   $('#recordId').value = '';
   $('#formTitle').textContent = '문화 기록 등록';
-  $('#consumedDate').value = new Date().toLocaleDateString('sv-SE');
+  var today = new Date();
+  var yy = today.getFullYear();
+  var mm = String(today.getMonth() + 1).padStart(2, '0');
+  var dd = String(today.getDate()).padStart(2, '0');
+  $('#consumedDate').value = yy + '-' + mm + '-' + dd;
+  $('#consumedTime').value = String(today.getHours()).padStart(2, '0') + ':' + String(today.getMinutes()).padStart(2, '0');
+  pickerSelectedDate = today;
   currentImg    = '';
   currentRating = 0;
   setStarRating(0);
   $('#imagePreview').innerHTML = '이미지 미리보기';
+  pickerClose();
 }
 
 function editRecord(id) {
@@ -695,7 +814,13 @@ function editRecord(id) {
   $('#formTitle').textContent = '문화 기록 수정';
   $('#category').value = r.category;
   $('#title').value    = r.title;
-  $('#consumedDate').value = r.consumedDate;
+  $('#consumedDate').value = r.consumedDate || '';
+  $('#consumedTime').value = r.consumedTime || '12:00';
+  // 피커의 선택 날짜도 동기화
+  if (r.consumedDate) {
+    var parts = r.consumedDate.split('-');
+    pickerSelectedDate = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+  }
   $('#place').value    = r.place || '';
   $('#moodTags').value = (r.moodTags || []).join(', ');
   $('#oneLineReview').value = r.oneLineReview || '';
@@ -765,11 +890,13 @@ function handleSubmit(e) {
   const id        = isEdit ? editingId : crypto.randomUUID();
 
   // 이미지는 currentImg 사용 (이미 change 이벤트에서 읽어둠)
+  const timeVal = $('#consumedTime').value || '00:00';
   const payload = {
     id:            id,
     title:         titleVal,
     category:      $('#category').value,
     consumedDate:  dateVal,
+    consumedTime:  timeVal,
     place:         $('#place').value.trim(),
     rating:        currentRating,
     moodTags:      $('#moodTags').value.split(',').map(function(t) { return t.trim(); }).filter(Boolean),
@@ -797,6 +924,43 @@ function handleSubmit(e) {
 
   resetForm();
   setView('archive');
+}
+
+/* ═══════════════════════════════════════
+   MOBILE DRAWER
+═══════════════════════════════════════ */
+function initMobileDrawer() {
+  var hamburger = $('#hamburger');
+  var sidebar   = $('#sidebar');
+  var overlay   = $('#drawerOverlay');
+  if (!hamburger) return;
+
+  function openDrawer() {
+    sidebar.classList.add('is-open');
+    overlay.classList.add('is-open');
+    hamburger.classList.add('is-open');
+    hamburger.setAttribute('aria-expanded', 'true');
+    document.body.style.overflow = 'hidden';
+  }
+  function closeDrawer() {
+    sidebar.classList.remove('is-open');
+    overlay.classList.remove('is-open');
+    hamburger.classList.remove('is-open');
+    hamburger.setAttribute('aria-expanded', 'false');
+    document.body.style.overflow = '';
+  }
+
+  hamburger.addEventListener('click', function() {
+    sidebar.classList.contains('is-open') ? closeDrawer() : openDrawer();
+  });
+  overlay.addEventListener('click', closeDrawer);
+
+  // 메뉴 항목 클릭 시 드로어 닫기 (모바일)
+  $$('.nav-item').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      if (window.innerWidth <= 960) closeDrawer();
+    });
+  });
 }
 
 /* ═══════════════════════════════════════
@@ -885,6 +1049,9 @@ function bindEvents() {
 
   // Calendar nav
   initCalendarNav();
+
+  // Mobile drawer
+  initMobileDrawer();
 }
 
 /* ═══════════════════════════════════════
@@ -903,6 +1070,9 @@ function init() {
 
   // Init mood suggestions
   renderMoodSuggest();
+
+  // Init custom date picker
+  initDatePicker();
 
   // Bind all events
   bindEvents();
